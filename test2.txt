@@ -1,0 +1,5 @@
+data x = 5 ; 
+main 
+begin 
+getter x ; 
+end 
