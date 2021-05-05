@@ -22,6 +22,7 @@ struct node_t {
 	struct node_t *right_child;
 	struct node_t *far_right_child;
 
+	// Tree level and flags for tokens
 	int tree_level;
 	int tkflg1;
 	int tkflg2;
@@ -58,6 +59,7 @@ void store_second_token(struct node_t* node, struct Token* token);
 void store_third_token(struct node_t* node, struct Token* token);
 void store_token(struct node_t* node, struct Token* token);
 struct Token next_Token(char * str, int * left, int * right, int * line_number);
+void calc_depth(struct node_t* node, int depth);
 void printPreorder(struct node_t* node);
 
 #endif

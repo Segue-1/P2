@@ -32,7 +32,8 @@ void testScanner(char * input) {
 	// Calls program, will recursively parse tokens
 	root = program(&token, input, left_ptr, right_ptr, line_numberPtr);
 
-	//printPreorder(root);
+	calc_depth(root, 0);
+	printPreorder(root);
 
 	printf("FINAL token: %s\n", token.instance);
 	if (token.type == 3) {
@@ -49,10 +50,15 @@ struct node_t* program(struct Token* token, char * str, int * left, int * right,
 
 	printf("In program\n");
 	printf("PROGRAM token.instance: %s\n", token->instance);
-	char label[] = "label";
+	char label[] = "program";
+	struct node_t* node;
 
-	struct node_t* node = get_Node(token, label);
-
+	if (strcmp(token->instance, "main") == 0){
+		node = get_Node(token, label);
+	}
+	else {
+		node = gen_Node(label);
+	}
 
 	// Call vars on left child
 	node->left_child = vars(token, str, left, right, line_number);
@@ -62,7 +68,6 @@ struct node_t* program(struct Token* token, char * str, int * left, int * right,
 	if (strcmp(token->instance, "main") == 0){
 		(*token) = scanner(str, left, right, line_number);
 	}
-
 
 	// Call block on middle child
 	node->middle_child = block(token, str, left, right, line_number);
@@ -140,7 +145,8 @@ struct node_t* vars(struct Token* token, char * str, int * left, int * right, in
 		store_second_token(node, token);
 		(*token) = scanner(str, left, right, line_number);
 
-		if(strcmp(token->instance, "=") != 0) {
+		if(strcmp(token->instance, ":=") != 0) {
+			printf("token: %s\n", token->instance);
 			printf("Error (vars): expecting =\n");
 			exit(0);
 		}
@@ -486,7 +492,7 @@ struct node_t* in(struct Token* token, char * str, int * left, int * right, int 
 	printf("In in\n");
 	printf("IN token.instance: %s\n", token->instance);
 
-	// Generate node and store in token
+	// Generate node and store in token with label
 	char label[] = "in";
 	struct node_t* node = get_Node(token, label);
 
@@ -929,20 +935,70 @@ struct Token next_Token(char * str, int * left, int * right, int * line_number){
 }
 
 
-void printPreorder(struct node_t* node){
+// Recursive function which calculates depth of each node
+void calc_depth(struct node_t* node, int depth){
 	
 	if (node != NULL) {
-		printf("%s\n", node->token.instance);
+
+		if ((node->tkflg1 == 1 && node->tkflg2 == 0 && node->tkflg3 == 0) || (node->tkflg1 && node->tkflg2 == 1 && node->tkflg3 == 0) || (node->tkflg1 && node->tkflg2 == 1 && node->tkflg3 == 1)){
+			node->tree_level = depth;
+
+			calc_depth(node->left_child, depth + 1);
+			calc_depth(node->middle_child, depth + 1);
+			calc_depth(node->right_child, depth + 1);
+			calc_depth(node->far_right_child, depth + 1);
+		}
+		else {
+
+			calc_depth(node->left_child, depth);
+			calc_depth(node->middle_child, depth);
+			calc_depth(node->right_child, depth);
+			calc_depth(node->far_right_child, depth);
+		}
+	
+	}
+
+}
+
+
+// Recursive preorder print function, checks token flags to determine what to print
+void printPreorder(struct node_t* node){
+
+	int i = 0;
+	
+	if (node != NULL) {
+		if (node->tkflg1 == 1 && node->tkflg2 == 0 && node->tkflg3 == 0) {
+			for (i = 0; i < node->tree_level; i++) {
+				printf("  ");
+			}
+			printf("%s: ", node->label);
+			printf("%s\n", node->token.instance);
+
+		}
+		if (node->tkflg1 && node->tkflg2 == 1 && node->tkflg3 == 0) {
+			for (i = 0; i < node->tree_level; i++) {
+				printf("  ");
+			}
+			printf("%s: ", node->label);
+			printf("%s %s\n", node->token.instance, node->second_token.instance);
+
+		}
+		if (node->tkflg1 && node->tkflg2 == 1 && node->tkflg3 == 1) {
+			for (i = 0; i < node->tree_level; i++) {
+				printf("  ");
+			}
+			printf("%s: ", node->label);
+			printf("%s %s %s\n", node->token.instance, node->second_token.instance, node->third_token.instance);
+
+		}
 
 		printPreorder(node->left_child);
-
 		printPreorder(node->middle_child);
-
 		printPreorder(node->right_child);
-
 		printPreorder(node->far_right_child);
 	
 	}
 
 }
+
 
